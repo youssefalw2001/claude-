@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fox AI - Low-Level Systems Expert</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>🦊 Fox AI</h1>
+                <p class="tagline">Senior Low-Level Systems Developer</p>
+            </div>
+            <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+        </header>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel hidden">
+            <h3>Configuration</h3>
+            
+            <div class="setting-group">
+                <label for="provider-select">Provider:</label>
+                <select id="provider-select" onchange="updateModels()">
+                    <option value="ollama">Ollama (Local)</option>
+                    <option value="groq">Groq (Cloud)</option>
+                    <option value="openrouter">OpenRouter (Cloud)</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="model-select">Model:</label>
+                <select id="model-select">
+                    <option value="">Loading models...</option>
+                </select>
+            </div>
+
+            <div class="setting-group api-key-group">
+                <label for="groq-key">Groq API Key:</label>
+                <input type="password" id="groq-key" placeholder="gsk_...">
+                <small>Saved in browser, never sent to server</small>
+            </div>
+
+            <div class="setting-group api-key-group">
+                <label for="openrouter-key">OpenRouter API Key:</label>
+                <input type="password" id="openrouter-key" placeholder="sk-or-v1-...">
+                <small>Saved in browser, never sent to server</small>
+            </div>
+
+            <div class="setting-group">
+                <label for="ollama-url">Ollama URL:</label>
+                <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434">
+            </div>
+
+            <button onclick="saveSettings()" class="save-btn">Save Settings</button>
+            <button onclick="clearHistory()" class="clear-btn">Clear Chat History</button>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chat-container">
+            <div class="welcome-message">
+                <h2>👋 Hey Jack, Fox here.</h2>
+                <p>Ready to fuck shit up. What are we building today?</p>
+                <div class="quick-actions">
+                    <button onclick="sendQuickMessage('Write me an AOB scanner in C++')">AOB Scanner</button>
+                    <button onclick="sendQuickMessage('Show me how to hook D3D11 Present')">D3D11 Hook</button>
+                    <button onclick="sendQuickMessage('Manual map DLL injection example')">Manual Map</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="message-input" 
+                    placeholder="Ask Fox anything..." 
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button id="send-btn" onclick="sendMessage()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="status-bar">
+                <span id="status-indicator">🟢 Ready</span>
+                <span id="model-indicator"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="chat.js"></script>
+</body>
+</html>
