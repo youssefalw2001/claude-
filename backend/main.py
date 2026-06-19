@@ -27,6 +27,7 @@ app.add_middleware(
 
 # Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_CLOUD_API_KEY = os.getenv("OLLAMA_CLOUD_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
@@ -37,10 +38,11 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    provider: str = "ollama"  # ollama, groq, openrouter
+    provider: str = "ollama"  # ollama, ollama-cloud, groq, openrouter
     model: Optional[str] = None
     stream: bool = False
     history: List[ChatMessage] = []
+    api_key: Optional[str] = None  # For client-side API keys
 
 class ModelInfo(BaseModel):
     name: str
@@ -65,7 +67,7 @@ async def list_models():
     """List available models from all providers"""
     models = []
     
-    # Ollama models
+    # Ollama local models
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
@@ -79,7 +81,17 @@ async def list_models():
                     ) for m in ollama_models
                 ])
     except Exception as e:
-        print(f"Failed to fetch Ollama models: {e}")
+        print(f"Failed to fetch Ollama local models: {e}")
+    
+    # Ollama Cloud models (always available)
+    models.extend([
+        ModelInfo(name="llama3.1:70b", provider="ollama-cloud", size="70B"),
+        ModelInfo(name="llama3.1:8b", provider="ollama-cloud", size="8B"),
+        ModelInfo(name="qwen2.5:72b", provider="ollama-cloud", size="72B"),
+        ModelInfo(name="deepseek-v3", provider="ollama-cloud", size="671B"),
+        ModelInfo(name="mistral:7b", provider="ollama-cloud", size="7B"),
+        ModelInfo(name="gemma2:27b", provider="ollama-cloud", size="27B"),
+    ])
     
     # Groq models (if API key provided)
     if GROQ_API_KEY:
@@ -105,6 +117,8 @@ async def chat(request: ChatRequest):
     
     if request.provider == "ollama":
         return await chat_ollama(request)
+    elif request.provider == "ollama-cloud":
+        return await chat_ollama_cloud(request)
     elif request.provider == "groq":
         return await chat_groq(request)
     elif request.provider == "openrouter":
@@ -144,6 +158,52 @@ async def chat_ollama(request: ChatRequest):
         raise HTTPException(status_code=504, detail="Ollama request timed out")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ollama error: {str(e)}")
+
+async def chat_ollama_cloud(request: ChatRequest):
+    """Chat with Ollama Cloud"""
+    # Get API key from request or environment
+    api_key = request.api_key or OLLAMA_CLOUD_API_KEY
+    
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Ollama Cloud API key not configured")
+    
+    model = request.model or "llama3.1:8b"
+    
+    # Build messages in OpenAI format (Ollama Cloud uses this)
+    messages = [{"role": "system", "content": FOX_SYSTEM_PROMPT}]
+    messages.extend([{"role": msg.role, "content": msg.content} for msg in request.history])
+    messages.append({"role": "user", "content": request.message})
+    
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                "https://ollama.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "temperature": 0.8,
+                    "max_tokens": 4096
+                }
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {"response": result["choices"][0]["message"]["content"]}
+            else:
+                error_detail = response.text
+                raise HTTPException(
+                    status_code=response.status_code, 
+                    detail=f"Ollama Cloud API error: {error_detail}"
+                )
+    
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Ollama Cloud request timed out")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ollama Cloud error: {str(e)}")
 
 async def chat_groq(request: ChatRequest):
     """Chat with Groq"""
