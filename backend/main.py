@@ -177,7 +177,7 @@ async def chat_ollama_cloud(request: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
-                "https://api.ollama.com/v1/chat/completions",
+                "https://ollama.com/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
@@ -185,7 +185,7 @@ async def chat_ollama_cloud(request: ChatRequest):
                 json={
                     "model": model,
                     "messages": messages,
-                    "temperature": 0.7,
+                    "temperature": 0.8,
                     "max_tokens": 4096
                 }
             )
