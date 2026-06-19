@@ -15,10 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Settings Management
 function loadSettings() {
-    currentProvider = localStorage.getItem('provider') || 'ollama';
+    currentProvider = localStorage.getItem('provider') || 'ollama-cloud';
     currentModel = localStorage.getItem('model') || '';
     
     document.getElementById('provider-select').value = currentProvider;
+    document.getElementById('ollama-cloud-key').value = localStorage.getItem('ollama_cloud_key') || '';
     document.getElementById('groq-key').value = localStorage.getItem('groq_key') || '';
     document.getElementById('openrouter-key').value = localStorage.getItem('openrouter_key') || '';
     document.getElementById('ollama-url').value = localStorage.getItem('ollama_url') || 'http://localhost:11434';
@@ -30,6 +31,7 @@ function saveSettings() {
     
     localStorage.setItem('provider', currentProvider);
     localStorage.setItem('model', currentModel);
+    localStorage.setItem('ollama_cloud_key', document.getElementById('ollama-cloud-key').value);
     localStorage.setItem('groq_key', document.getElementById('groq-key').value);
     localStorage.setItem('openrouter_key', document.getElementById('openrouter-key').value);
     localStorage.setItem('ollama_url', document.getElementById('ollama-url').value);
@@ -90,7 +92,22 @@ function updateModelDropdown() {
 
 function updateModelIndicator() {
     const indicator = document.getElementById('model-indicator');
-    indicator.textContent = `${currentProvider} | ${currentModel || 'No model'}`;
+    const providerName = currentProvider === 'ollama-cloud' ? 'Ollama Cloud' : currentProvider;
+    indicator.textContent = `${providerName} | ${currentModel || 'No model'}`;
+}
+
+// Get API key for current provider from localStorage
+function getApiKeyForProvider(provider) {
+    switch(provider) {
+        case 'ollama-cloud':
+            return localStorage.getItem('ollama_cloud_key') || '';
+        case 'groq':
+            return localStorage.getItem('groq_key') || '';
+        case 'openrouter':
+            return localStorage.getItem('openrouter_key') || '';
+        default:
+            return '';
+    }
 }
 
 // Chat Functions
@@ -135,7 +152,8 @@ async function sendMessage() {
                 message: message,
                 provider: currentProvider,
                 model: currentModel,
-                history: chatHistory.slice(-10) // Keep last 10 messages for context
+                history: chatHistory.slice(-10), // Keep last 10 messages for context
+                api_key: getApiKeyForProvider(currentProvider)
             })
         });
         

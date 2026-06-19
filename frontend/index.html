@@ -24,6 +24,7 @@
             <div class="setting-group">
                 <label for="provider-select">Provider:</label>
                 <select id="provider-select" onchange="updateModels()">
+                    <option value="ollama-cloud">Ollama Cloud (Free)</option>
                     <option value="ollama">Ollama (Local)</option>
                     <option value="groq">Groq (Cloud)</option>
                     <option value="openrouter">OpenRouter (Cloud)</option>
@@ -35,6 +36,12 @@
                 <select id="model-select">
                     <option value="">Loading models...</option>
                 </select>
+            </div>
+
+            <div class="setting-group api-key-group">
+                <label for="ollama-cloud-key">Ollama Cloud API Key:</label>
+                <input type="password" id="ollama-cloud-key" placeholder="Your Ollama API key">
+                <small>Get free key at <a href="https://ollama.com/signup" target="_blank">ollama.com/signup</a></small>
             </div>
 
             <div class="setting-group api-key-group">
@@ -62,7 +69,7 @@
         <div class="chat-container" id="chat-container">
             <div class="welcome-message">
                 <h2>👋 Hey Jack, Fox here.</h2>
-                <p>Ready to fuck shit up. What are we building today?</p>
+                <p>Ready to fuck shit up. Ollama Cloud is connected and ready to roll.</p>
                 <div class="quick-actions">
                     <button onclick="sendQuickMessage('Write me an AOB scanner in C++')">AOB Scanner</button>
                     <button onclick="sendQuickMessage('Show me how to hook D3D11 Present')">D3D11 Hook</button>
